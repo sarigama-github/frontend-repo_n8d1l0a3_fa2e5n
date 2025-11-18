@@ -1,68 +1,93 @@
+import { useEffect, useState } from 'react'
 import Spline from '@splinetool/react-spline'
 
-const sand = '#c6c0ae'
-const cocoa = '#433534'
-const rouge = '#753c36'
-const clay = '#a74338'
-const flame = '#da4b3a'
+const palette = {
+  sand: '#c6c0ae',
+  cocoa: '#433534',
+  rouge: '#753c36',
+  clay: '#a74338',
+  flame: '#da4b3a',
+}
 
 export default function Hero() {
-  return (
-    <section className="relative min-h-[90vh] flex items-center" aria-label="Hero">
-      {/* Background gradient wash using palette */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            `radial-gradient(1200px 500px at 10% 20%, ${flame}22, transparent),` +
-            `radial-gradient(900px 400px at 80% 10%, ${rouge}22, transparent),` +
-            `linear-gradient(180deg, ${cocoa}, #241c1b)`
-        }}
-      />
+  const [canRenderSpline, setCanRenderSpline] = useState(false)
 
-      {/* Spline cover */}
-      <div className="absolute inset-0 opacity-90">
-        <Spline scene="https://prod.spline.design/LU2mWMPbF3Qi1Qxh/scene.splinecode" style={{ width: '100%', height: '100%' }} />
+  useEffect(() => {
+    // Avoid rendering Spline until client mounted to prevent hydration issues
+    setCanRenderSpline(true)
+  }, [])
+
+  return (
+    <section className="relative min-h-[90vh] w-full overflow-hidden pt-28" aria-label="Hero">
+      {/* Background base color */}
+      <div className="absolute inset-0" style={{ background: palette.cocoa }} />
+
+      {/* Spline canvas */}
+      <div className="absolute inset-0">
+        {canRenderSpline && (
+          <Spline scene="https://prod.spline.design/LU2mWMPbF3Qi1Qxh/scene.splinecode" />
+        )}
       </div>
 
-      {/* Subtle overlay for contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70 pointer-events-none" />
+      {/* Gradient overlays for contrast */}
+      <div className="pointer-events-none absolute inset-0" style={{
+        background:
+          `radial-gradient(800px 400px at 10% 10%, ${palette.rouge}33, transparent), ` +
+          `radial-gradient(600px 300px at 90% 30%, ${palette.flame}22, transparent), ` +
+          `linear-gradient(180deg, #00000055 0%, #00000066 40%, #00000088 100%)`,
+      }} />
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16">
-        <div className="max-w-3xl">
-          <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium tracking-wide" style={{ backgroundColor: '#ffffff14', color: sand, border: '1px solid rgba(255,255,255,0.12)' }}>
-            AI Agency • Systems • No‑code Automation
-          </span>
-
-          <h1 className="mt-6 text-4xl sm:text-6xl font-extrabold leading-tight" style={{ color: sand }}>
-            Streamlining Sales, CX and Operations with AI & No‑code
-          </h1>
-
-          <p className="mt-5 text-lg sm:text-xl leading-relaxed" style={{ color: '#e8e5db' }}>
-            I help businesses design and automate end‑to‑end systems — from lead capture to customer success — using
-            modern AI tooling and battle‑tested no‑code platforms. Based in Nairobi, working worldwide.
-          </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <a href="#contact" className="inline-flex items-center justify-center rounded-xl px-5 py-3 font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5" style={{ backgroundColor: flame }}>
-              Book a Strategy Call
-            </a>
-            <a href="#work" className="inline-flex items-center justify-center rounded-xl px-5 py-3 font-semibold text-white/90 border border-white/20 hover:bg-white/5">
-              See Work
-            </a>
-          </div>
-
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              { k: 'Sales Process', v: 'Lead gen to closed‑won automations' },
-              { k: 'Customer Experience', v: 'Onboarding, support, self‑serve AI' },
-              { k: 'Internal Ops', v: 'Back‑office workflows & dashboards' },
-            ].map((item) => (
-              <div key={item.k} className="rounded-xl border border-white/15 bg-white/5 p-4">
-                <p className="text-sm text-white/60">{item.k}</p>
-                <p className="mt-1 font-semibold" style={{ color: sand }}>{item.v}</p>
+      {/* Content */}
+      <div className="relative z-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-10 items-center py-16 sm:py-24">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/80">
+                <span className="h-2 w-2 rounded-full" style={{ background: palette.flame }} />
+                AI & No‑code Systems for Growth Teams
               </div>
-            ))}
+              <h1 className="mt-5 text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight" style={{ color: palette.sand }}>
+                Streamline sales, support and ops with AI‑powered systems
+              </h1>
+              <p className="mt-5 max-w-2xl text-white/80 text-lg leading-relaxed">
+                I’m Bob Mwathu — CTO at Brainse.co and AI Researcher at Brainse AI in Nairobi. I design and ship
+                reliable automations and customer journeys so your team can focus on growth.
+              </p>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <a
+                  href="#contact"
+                  className="inline-flex items-center justify-center rounded-xl px-5 py-3 font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5"
+                  style={{ backgroundColor: palette.flame }}
+                >
+                  Book a Strategy Call
+                </a>
+                <a
+                  href="#solutions"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-5 py-3 font-medium text-white/90 hover:bg-white/15"
+                >
+                  Explore Solutions
+                </a>
+              </div>
+
+              <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { k: 'Sales Process', v: 'Lead capture → Scoring → Handoff' },
+                  { k: 'Customer Experience', v: 'Onboarding • Assist • Retain' },
+                  { k: 'Internal Operations', v: 'Back‑office automation' },
+                ].map((f) => (
+                  <div key={f.k} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-xs text-white/60">{f.k}</p>
+                    <p className="mt-1 font-medium" style={{ color: palette.sand }}>{f.v}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Spacer on the right to let Spline breathe visually */}
+            <div className="lg:col-span-5" aria-hidden>
+              <div className="h-[40vh] sm:h-[50vh] lg:h-[60vh]" />
+            </div>
           </div>
         </div>
       </div>
