@@ -1,5 +1,14 @@
-import { useEffect, useState } from 'react'
-import Spline from '@splinetool/react-spline'
+import React, { useEffect, useState } from 'react'
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(error, info) { console.error('Hero ErrorBoundary caught:', error, info) }
+  render() { return this.state.hasError ? this.props.fallback : this.props.children }
+}
 
 const palette = {
   sand: '#c6c0ae',
@@ -10,26 +19,57 @@ const palette = {
 }
 
 export default function Hero() {
-  const [canRenderSpline, setCanRenderSpline] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [SplineComp, setSplineComp] = useState(null)
+  const [reduceMotion, setReduceMotion] = useState(false)
+  const [splineError, setSplineError] = useState(null)
 
   useEffect(() => {
-    // Avoid rendering Spline until client mounted to prevent hydration issues
-    setCanRenderSpline(true)
+    setMounted(true)
+
+    if (typeof window !== 'undefined') {
+      const mql = window.matchMedia('(prefers-reduced-motion: reduce)')
+      setReduceMotion(mql.matches)
+      const onChange = (e) => setReduceMotion(e.matches)
+      try { mql.addEventListener('change', onChange) } catch (_) { try { mql.addListener(onChange) } catch (_) {} }
+      return () => {
+        try { mql.removeEventListener('change', onChange) } catch (_) { try { mql.removeListener(onChange) } catch (_) {} }
+      }
+    }
   }, [])
+
+  useEffect(() => {
+    let active = true
+    if (mounted && !reduceMotion) {
+      import('@splinetool/react-spline')
+        .then((mod) => { if (active) setSplineComp(() => mod.default) })
+        .catch((err) => { console.error('Failed to load Spline:', err); setSplineError(err) })
+    }
+    return () => { active = false }
+  }, [mounted, reduceMotion])
+
+  const FallbackBg = (
+    <div className="h-full w-full" style={{
+      background:
+        `radial-gradient(1200px 600px at 80% 20%, ${palette.rouge}22, transparent), ` +
+        `radial-gradient(900px 500px at 10% 80%, ${palette.clay}22, transparent)`
+    }} />
+  )
 
   return (
     <section className="relative min-h-[90vh] w-full overflow-hidden pt-28" aria-label="Hero">
-      {/* Background base color */}
       <div className="absolute inset-0" style={{ background: palette.cocoa }} />
 
-      {/* Spline canvas */}
       <div className="absolute inset-0">
-        {canRenderSpline && (
-          <Spline scene="https://prod.spline.design/LU2mWMPbF3Qi1Qxh/scene.splinecode" />
+        {mounted && !reduceMotion && SplineComp && !splineError ? (
+          <ErrorBoundary fallback={FallbackBg}>
+            <SplineComp scene="https://prod.spline.design/LU2mWMPbF3Qi1Qxh/scene.splinecode" />
+          </ErrorBoundary>
+        ) : (
+          FallbackBg
         )}
       </div>
 
-      {/* Gradient overlays for contrast */}
       <div className="pointer-events-none absolute inset-0" style={{
         background:
           `radial-gradient(800px 400px at 10% 10%, ${palette.rouge}33, transparent), ` +
@@ -37,7 +77,6 @@ export default function Hero() {
           `linear-gradient(180deg, #00000055 0%, #00000066 40%, #00000088 100%)`,
       }} />
 
-      {/* Content */}
       <div className="relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-10 items-center py-16 sm:py-24">
@@ -84,7 +123,6 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Spacer on the right to let Spline breathe visually */}
             <div className="lg:col-span-5" aria-hidden>
               <div className="h-[40vh] sm:h-[50vh] lg:h-[60vh]" />
             </div>
